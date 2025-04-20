@@ -6,7 +6,7 @@
 /*   By: tursescu <tursescu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 11:44:08 by tursescu          #+#    #+#             */
-/*   Updated: 2025/04/17 16:45:45 by tursescu         ###   ########.fr       */
+/*   Updated: 2025/04/20 16:42:51 by tursescu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,5 +122,59 @@ void BitcoinExchange::loadDataBase(const std::string &filename) {
 }
 
 float BitcoinExchange::convertValue(const std::string &date, float value) {    
+    //find the closest date in the database
+    std::string closestDate = findClosestDate(date);
+    //see if the closest date is valid
+    if (closestDate.empty()) {
+        std::cout << RED << "Error: no valid exchange rate found for date " << date << RESET << std::endl;
+        return 0.0f;
+    }
+    float exchangeRate = data[closestDate];
+    return value * exchangeRate;
 }
-void processInputFile(const std::string &filename);
+void BitcoinExchange::processInputFile(const std::string &filename) {
+     std::ifstream file(filename.c_str());
+     if (!file.is_open()) {
+        std::cout << RED << "Error: could not open file" << RESET << std::endl;
+        return;
+     }
+     std::string line;
+     //skip header line
+     std::getline(file, line);
+     while(std::getline(file, line)) {
+        //find the separator '|'
+        size_t pipePos = line.find('|');
+        if (pipePos == std::string::npos) { // npos greates possible val for an element of type size_t, ususally used to indicate no matches
+            std::cout << RED << "Error: bad input => " << line << RESET << std::endl;
+            continue;
+        }
+        //extract date and value parts
+        std::string dateStr = line.substr(0, pipePos);//substr can either get 2 param to for a string from the fist one till the second
+        std::string valueStr = line.substr(pipePos + 1);// or it can get one para, and it forms the string from it till the end of the string
+        //eliminate whitespaces
+        dateStr.erase(0, dateStr.find_first_not_of(" \t"));//finds the position of the first character in the string that is NOT a space or tab, and erases everithing from pos 0 untill there
+        dateStr.erase(dateStr.find_last_not_of(" \t") + 1);// erases everything from one position further from the laset non-space non-tab character, untill the end.
+        valueStr.erase(0, valueStr.find_first_not_of(" \t"));
+        valueStr.erase(valueStr.find_last_not_of(" \t"));
+        //same like substring, erase can either get two params and it erases everything in between them(including them), or one parameter(erasing everything from that param to the end of the string)
+        //validate date
+        if (!isValidDate(dateStr)) {
+            //message printed by isValidDate()
+            continue;
+        }
+        //parse and validate value
+        float value;
+        std::istringstream valueStream(valueStr);
+        if (!(valueStream >> value) || !valueStream.eof()) {
+            std::cout << RED << "Error: invalid value format." << RESET << std::endl;
+            continue;
+        }
+        if (!isValidValue(value)) {
+            continue;// isValidValue will handle the error message
+        }
+        //calculate the result
+        float result = convertValue(dateStr, value);
+        std::cout << dateStr << " => " << value << " = " << result << std::endl;
+    }
+    file.close();
+}

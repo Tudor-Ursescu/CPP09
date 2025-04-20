@@ -6,7 +6,7 @@
 #    By: tursescu <tursescu@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/14 06:10:14 by tursescu          #+#    #+#              #
-#    Updated: 2025/04/14 06:10:29 by tursescu         ###   ########.fr        #
+#    Updated: 2025/04/20 16:49:10 by tursescu         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,7 @@ CXX = @c++
 RM = @rm -f
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 OBJS = $(SRC:.cpp=.o)
-NAME = mutantstack
+NAME = btc
 %.o: %.cpp	
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 all: $(NAME)
